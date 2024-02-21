@@ -34,6 +34,7 @@ def upgrade() -> None:
         sa.Column('floor_number', sa.Integer),
         sa.Column('building_repair', sa.Text),
         sa.Column('type_of_ad', sa.String(100)),
+        sa.Column('created_at', sa.DateTime, server_default=sa.sql.func.now()),
         sa.Column('source', sa.String(20)),
     )
 
