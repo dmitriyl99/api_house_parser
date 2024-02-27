@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Generator
 
 from .strategies import BuildingExtractionStrategy
+from .viewmodels import BuildingViewModel
 from app.dal.models import Building
 
 
@@ -10,5 +11,5 @@ class BuildingExtractor:
     def __init__(self, extractor: BuildingExtractionStrategy) -> None:
         self._extractor = extractor
     
-    def extract(self) -> List[Building]:
+    def extract(self) -> Generator[List[BuildingViewModel]]:
         return self._extractor.extract()

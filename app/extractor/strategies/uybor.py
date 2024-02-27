@@ -5,6 +5,7 @@ import re
 
 from app.dal.models import Building
 from . import BuildingExtractionStrategy
+from ..viewmodels import BuildingViewModel, ImageViewModel
 from app.settings import settings
 
 import requests
@@ -24,17 +25,9 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
         )
         self.logger = logging.getLogger("uybor-extraction")
 
-    def extract(self) -> Generator[List[Building]]:
-        self.logger.info(f"Start extracting buildings from {settings.uybor_hostname}/api/{settings.uybor_api_version}")
-        has_buildings = True
-        counter = 1
-        limit = 100
-        while has_buildings:
-            total, buildings = self._extract_buildings(
-                currency='usd', limit=limit)
-            has_buildings = len(buildings) != 0
-            self.logger.debug(f"Get {counter * limit}/{total} buildings")
-            yield list(map(lambda raw_building: Building(
+    def extract(self) -> Generator[List[BuildingViewModel]]:
+        def convert_building(raw_building: dict):
+            building = BuildingViewModel(
                 territory=raw_building['region']['name']['ru'],
                 area=f'{raw_building['district']['name']['ru'] + ''} {
                     raw_building['street']['name']['ru']} {raw_building['zone']['name']['ru']}',
@@ -48,8 +41,24 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                 floor_number=raw_building['floorTotal'],
                 building_repair=raw_building['repair'],
                 type_of_ad=raw_building['user']['role'],
-                source='uybor'
-            ), buildings))
+                source='uybor',
+                views=raw_building['views'],
+                user_name=raw_building['user']['displayName'],
+                images=list(map(lambda raw_media: ImageViewModel(filename=raw_media['filename'], url=raw_media['url'])))
+            )
+            building.user_phone = self._extract_phone(raw_building['id'])
+            return building
+        
+        self.logger.info(f"Start extracting buildings from {settings.uybor_hostname}/api/{settings.uybor_api_version}")
+        has_buildings = True
+        counter = 1
+        limit = 100
+        while has_buildings:
+            total, buildings = self._extract_buildings(
+                currency='usd', limit=limit)
+            has_buildings = len(buildings) != 0
+            self.logger.debug(f"Get {counter * limit}/{total} buildings")
+            yield list(map(convert_building, buildings))
         self.logger.info("Done extracting buildings from {settings.uybor_hostname}/api/{settings.uybor_api_version}")
 
     def _get_categories(self) -> List[dict]:
@@ -73,3 +82,10 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
             '/listings', params=params)
         data = response.json()
         return data['total'], data['results']
+
+    def _extract_phone(self, building_id: int) -> str | None:
+        response: requests.Response = self.session.get(f"/listings/{building_id}/phone")
+        data: dict = response.json()
+        if 'phone' in data:
+            return data['phone']
+        return None

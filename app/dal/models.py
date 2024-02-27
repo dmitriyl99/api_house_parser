@@ -35,5 +35,18 @@ class Building(Base):
     type_of_ad: Mapped[str] = mapped_column(String(100))
     created_at: Mapped[datetime] = mapped_column(DateTime)
     source: Mapped[str] = mapped_column(String(20))
+    views: Mapped[int] = mapped_column(Integer)
+    user_name: Mapped[str] = mapped_column(String(200))
+    user_phone: Mapped[str] = mapped_column(String(200))
 
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
+
+
+class Image(Base):
+    __tablename__ = 'images'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    filename: Mapped[str] = mapped_column(String(200))
+    url: Mapped[str] = mapped_column(String(500))
+
+    building_id: Mapped[int] = mapped_column(ForeignKey("buildings.id"))
