@@ -9,7 +9,6 @@ class ImageViewModel(BaseModel):
     url: str
 
 
-
 class BuildingViewModel(BaseModel):
     territory: str
     area: str
@@ -23,7 +22,7 @@ class BuildingViewModel(BaseModel):
     building_repair: str
     type_of_ad: str
     source: str
-    views: int
+    views: int | None = None
     user_name: str
     user_phone: str | None = None
     category_id: int | None = None
