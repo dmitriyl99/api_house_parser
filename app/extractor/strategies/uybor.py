@@ -28,8 +28,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
         def convert_building(raw_building: dict):
             building = BuildingViewModel(
                 territory=raw_building['region']['name']['ru'],
-                area=f'{raw_building['district']['name']['ru'] if raw_building['district'] else ''} {
-                    raw_building['street']['name']['ru'] if raw_building['street'] else ''} {raw_building['zone']['name']['ru'] if raw_building['zone'] else ''}',
+                area=f"{raw_building['district']['name']['ru'] if raw_building['district'] else ''} {raw_building['street']['name']['ru'] if raw_building['street'] else ''} {raw_building['zone']['name']['ru'] if raw_building['zone'] else ''}",
                 sell_type=raw_building['operationType'],
                 room_number=int(
                     re.search(r'\d+', raw_building['room']).group()) if raw_building['room'] else None,
@@ -42,12 +41,14 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                 type_of_ad=raw_building['user']['role'],
                 source='uybor',
                 views=raw_building['views'],
-                user_name=raw_building['user']['displayName'] if 'displayName' in raw_building['user'] else raw_building['user']['firstName'] + ' ' + raw_building['user']['lastName'],
-                images=list(map(lambda raw_media: ImageViewModel(filename=raw_media['fileName'], url=raw_media['url']), raw_building['media']))
+                user_name=raw_building['user']['displayName'] if 'displayName' in raw_building['user'] else
+                raw_building['user']['firstName'] + ' ' + raw_building['user']['lastName'],
+                images=list(map(lambda raw_media: ImageViewModel(filename=raw_media['fileName'], url=raw_media['url']),
+                                raw_building['media']))
             )
             building.user_phone = self._extract_phone(raw_building['id'])
             return building
-        
+
         self.logger.info(f"Start extracting buildings from {settings.uybor_hostname}/api/{settings.uybor_api_version}")
         has_buildings = True
         counter = 1
@@ -63,7 +64,8 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
     def _get_categories(self) -> List[dict]:
         return self.session.get('/listings/categories', params={'limit': 999})
 
-    def _extract_buildings(self, currency: str, limit: int = 20, operation_type: str = None, category_id: int = None, page: int = 1) -> Tuple[int, List[dict]]:
+    def _extract_buildings(self, currency: str, limit: int = 20, operation_type: str = None, category_id: int = None,
+                           page: int = 1) -> Tuple[int, List[dict]]:
         if currency not in ['usd', 'uzs']:
             raise ValueError(f"Incorrect currency {currency}")
         params = {
