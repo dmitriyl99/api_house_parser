@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column('id', sa.BigInteger, primary_key=True),
         sa.Column('territory', sa.String(100), nullable=True),
         sa.Column('area', sa.String(100), nullable=True),
-        sa.Column('category_id', sa.ForeignKey('categories.id')),
+        sa.Column('category_id', sa.Integer, sa.ForeignKey('categories.id')),
         sa.Column('sell_type', sa.String(20)),
         sa.Column('room_number', sa.Integer),
         sa.Column('land_area', sa.Float, nullable=True),

@@ -3,7 +3,6 @@ from functools import partial
 import logging
 import re
 
-from app.dal.models import Building
 from . import BuildingExtractionStrategy
 from ..viewmodels import BuildingViewModel, ImageViewModel
 from app.settings import settings
@@ -25,26 +24,26 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
         )
         self.logger = logging.getLogger("uybor-extraction")
 
-    def extract(self) -> Generator[List[BuildingViewModel]]:
+    def extract(self) -> Generator[List[BuildingViewModel], None, None]:
         def convert_building(raw_building: dict):
             building = BuildingViewModel(
                 territory=raw_building['region']['name']['ru'],
-                area=f'{raw_building['district']['name']['ru'] + ''} {
-                    raw_building['street']['name']['ru']} {raw_building['zone']['name']['ru']}',
+                area=f'{raw_building['district']['name']['ru'] if raw_building['district'] else ''} {
+                    raw_building['street']['name']['ru'] if raw_building['street'] else ''} {raw_building['zone']['name']['ru'] if raw_building['zone'] else ''}',
                 sell_type=raw_building['operationType'],
                 room_number=int(
-                    re.search(r'\d+', raw_building['room']).group()),
+                    re.search(r'\d+', raw_building['room']).group()) if raw_building['room'] else None,
                 land_area=raw_building['squareGround'] if 'squareGround' in raw_building else None,
                 building_area=raw_building['square'],
                 price=raw_building['price'],
-                floor=raw_building['floor'],
+                floor=raw_building['floor'] if 'floor' in raw_building else None,
                 floor_number=raw_building['floorTotal'],
                 building_repair=raw_building['repair'],
                 type_of_ad=raw_building['user']['role'],
                 source='uybor',
                 views=raw_building['views'],
-                user_name=raw_building['user']['displayName'],
-                images=list(map(lambda raw_media: ImageViewModel(filename=raw_media['filename'], url=raw_media['url'])))
+                user_name=raw_building['user']['displayName'] if 'displayName' in raw_building['user'] else raw_building['user']['firstName'] + ' ' + raw_building['user']['lastName'],
+                images=list(map(lambda raw_media: ImageViewModel(filename=raw_media['fileName'], url=raw_media['url']), raw_building['media']))
             )
             building.user_phone = self._extract_phone(raw_building['id'])
             return building
@@ -70,7 +69,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
         params = {
             'includeFeatured': True,
             'limit': limit,
-            'embed': 'category,subCategory,residentialComplex,region,city,district,zone,street,metro',
+            'embed': 'category,subCategory,residentialComplex,region,city,district,zone,street,metro,user,media',
             'priceCurrency__eq': currency,
             'page': page
         }

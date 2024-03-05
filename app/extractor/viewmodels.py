@@ -12,21 +12,20 @@ class ImageViewModel(BaseModel):
 
 class BuildingViewModel(BaseModel):
     territory: str
-    area: int
+    area: str
     sell_type: str
-    room_number: int
-    land_area: float
+    room_number: int | None = None
+    land_area: float | None = None
     building_area: float
     price: int
-    floor: int
+    floor: int | None = None
     floor_number: int
     building_repair: str
     type_of_ad: str
-    created_at: datetime
     source: str
     views: int
     user_name: str
-    user_phone: str
-    category_id: int
+    user_phone: str | None = None
+    category_id: int | None = None
 
     images: List[ImageViewModel]

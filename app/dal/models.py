@@ -15,7 +15,7 @@ class Category(Base):
     parent_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
 
     parent: Mapped["Category"] = relationship(back_populates='children')
-    children: Mapped[List["Category"]] = relationship(back_populates='parent')
+    children: Mapped[List["Category"]] = relationship()
 
 
 class Building(Base):

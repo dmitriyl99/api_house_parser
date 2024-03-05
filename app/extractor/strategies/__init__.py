@@ -5,5 +5,5 @@ from app.dal.models import Building
 
 
 class BuildingExtractionStrategy(ABC):
-    def extract() -> Generator[List[Building]]:
+    def extract() -> Generator[List[Building], None, None]:
         raise NotImplementedError("Subclasses must implement the extract method.")

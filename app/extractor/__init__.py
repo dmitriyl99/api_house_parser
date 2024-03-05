@@ -11,5 +11,5 @@ class BuildingExtractor:
     def __init__(self, extractor: BuildingExtractionStrategy) -> None:
         self._extractor = extractor
     
-    def extract(self) -> Generator[List[BuildingViewModel]]:
+    def extract(self) -> Generator[List[BuildingViewModel], None, None]:
         return self._extractor.extract()

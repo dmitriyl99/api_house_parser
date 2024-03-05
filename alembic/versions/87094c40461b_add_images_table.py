@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger, primary_key=True),
         sa.Column("filename", sa.String(200)),
         sa.Column("url", sa.String(500), nullable=True),
-        sa.Column("building_id", sa.ForeignKey("buildings.id"))
+        sa.Column("building_id", sa.Integer, sa.ForeignKey("buildings.id"))
     )
 
 
