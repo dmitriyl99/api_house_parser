@@ -28,7 +28,9 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
         def convert_building(raw_building: dict):
             building = BuildingViewModel(
                 territory=raw_building['region']['name']['ru'],
-                area=f"{raw_building['district']['name']['ru'] if raw_building['district'] else ''} {raw_building['street']['name']['ru'] if raw_building['street'] else ''} {raw_building['zone']['name']['ru'] if raw_building['zone'] else ''}",
+                area=f"{raw_building['district']['name']['ru'] if raw_building['district'] else ''} "
+                     f"{raw_building['street']['name']['ru'] if raw_building['street'] else ''} "
+                     f"{raw_building['zone']['name']['ru'] if raw_building['zone'] else ''}",
                 sell_type=raw_building['operationType'],
                 room_number=int(
                     re.search(r'\d+', raw_building['room']).group()) if raw_building['room'] else None,
@@ -62,7 +64,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
         self.logger.info("Done extracting buildings from {settings.uybor_hostname}/api/{settings.uybor_api_version}")
 
     def _get_categories(self) -> List[dict]:
-        return self.session.get('/listings/categories', params={'limit': 999})
+        return self.session.get('/listings/categories', params={'limit': 999}).json()
 
     def _extract_buildings(self, currency: str, limit: int = 20, operation_type: str = None, category_id: int = None,
                            page: int = 1) -> Tuple[int, List[dict]]:
