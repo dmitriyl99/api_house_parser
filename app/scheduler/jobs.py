@@ -5,12 +5,15 @@ from app.extractor.viewmodels import BuildingViewModel
 from app.dal.repositories import buildings as buildings_repository
 from app.dal.models import Building, Image
 
+from time import sleep
+
 
 def parse_uybor():
     extractor = BuildingExtractor(UyBorExtractionStrategy())
     for buildings in extractor.extract():
         for building in buildings:
             _save_building_to_repository(building)
+        sleep(5)
 
 
 def parse_olx():
