@@ -55,7 +55,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
             user_name = raw_building['user']['name']
             user_phone = raw_building['contact']['name']
             territory = raw_building['location']['region']['name']
-            area = raw_building['location']['city']['name'] + ' ' + raw_building['location']['district']['name']
+            area = raw_building['location']['city']['name'] + ' ' + (raw_building['location']['district']['name'] if 'district' in raw_building['location'] else '')
 
             images = list(
                 map(
@@ -65,6 +65,8 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
                     ), raw_building['photos']
                 )
             )
+
+            views = OlxExtractionStrategy._extract_views_for_building(raw_building['id'])
 
             return BuildingViewModel(
                 territory=territory,
@@ -80,14 +82,17 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
                 source='olx',
                 sell_type=sell_type,
                 user_name=user_name,
-                user_phone=user_phone
+                user_phone=user_phone,
+                images=images,
+                views=views,
             )
 
         self.logger.info(f"Start extracting buildings from {settings.olx_hostname}/api/{settings.olx_api_version}")
         has_buildings = True
         counter = 1
         offset = 0
-        limit = 100
+        limit = 40
+        max_offset = 1000
         category_sell_type_param = [
             {
                 'olx_category_id': 1147,
@@ -132,15 +137,31 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
         ]
         for param in category_sell_type_param:
             while has_buildings:
+                if offset > max_offset:
+                    break
                 buildings: List[dict] = self._extract_building(param['olx_category_id'], offset, limit)
                 has_buildings = len(buildings) != 0
                 self.logger.debug(f"Get {counter * limit} buildings")
                 offset += limit
                 yield list(map(lambda x: convert_building(x, param['sell_type'], param['category']), buildings))
 
-    def _extract_building(self, category_id: int = 1, offset: int = 0, limit: int = 100) -> List[dict]:
+    def _extract_building(self, category_id: int = 1, offset: int = 0, limit: int = 50) -> List[dict]:
         response: requests.Response = self.session.get(
             '/offers/', params={'category_id': 1, 'offset': offset, 'limit': limit}
         )
+        if response.status_code != 200:
+            print(response.json())
+            raise ValueError("Response from olx wasn't successful")
         return response.json()['data']
 
+    @staticmethod
+    def _extract_views_for_building(building_id: int) -> int:
+        response: requests.Response = requests.post('https://production-graphql.eu-sharedservices.olxcdn.com/graphql', json={
+            'query': 'query PageViews($adId: String!) {b2c {pageViews(adId: $adId) {pageViews}}}',
+            'variables': {
+                'adId': str(building_id)
+            }
+        })
+
+        response_data = response.json()
+        return response_data['data']['b2c']['pageViews']['pageViews']
