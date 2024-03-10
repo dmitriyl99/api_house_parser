@@ -1,9 +1,15 @@
 from fastapi import FastAPI
+import logging
 
 from contextlib import asynccontextmanager
 
 from app import scheduler
 
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
 
 @asynccontextmanager
