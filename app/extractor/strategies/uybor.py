@@ -22,6 +22,14 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
             args, **kwargs: f(method, prefix + url, *args, **kwargs),
             f'{settings.uybor_hostname}/api/{settings.uybor_api_version}', self.session.request
         )
+        self.session.headers = {
+            'Accept': '*/*',
+            'Accept-Language': 'ru',
+            'Connection': 'keep-alive',
+            'Origin': 'https://uybor.uz',
+            'Referer': 'https://uybor.uz/',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
+        }
         self.logger = logging.getLogger("uybor-extraction")
 
     def extract(self) -> Generator[List[BuildingViewModel], None, None]:
