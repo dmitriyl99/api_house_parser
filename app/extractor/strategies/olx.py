@@ -1,6 +1,7 @@
 from typing import List, Generator
 from functools import partial
 import logging
+import time
 
 import requests
 
@@ -27,6 +28,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
 
     def extract(self) -> Generator[List[Building], None, None]:
         def convert_building(raw_building: dict, sell_type: str, category: str) -> BuildingViewModel:
+            time.sleep(0.5)
 
             def find_param(params: List[dict], param_name: str):
                 found_params = list(filter(lambda x: x['key'] == param_name, params))
@@ -155,13 +157,19 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
         return response.json()['data']
 
     @staticmethod
-    def _extract_views_for_building(building_id: int) -> int:
+    def _extract_views_for_building(building_id: int) -> int | None:
         response: requests.Response = requests.post('https://production-graphql.eu-sharedservices.olxcdn.com/graphql', json={
             'query': 'query PageViews($adId: String!) {b2c {pageViews(adId: $adId) {pageViews}}}',
             'variables': {
                 'adId': str(building_id)
             }
+        }, headers={
+            'Authorization': 'Bearer 03805c4503dc1ca61f47055cf4693b467aa5efec,fa7ad9528c2c1ed1bd8d638336e942f0eeb5664d',
+            'Site': 'olxuz'
         })
-
         response_data = response.json()
-        return response_data['data']['b2c']['pageViews']['pageViews']
+        try:
+            return response_data['data']['b2c']['pageViews']['pageViews']
+        except TypeError:
+            print(response_data)
+            return None
