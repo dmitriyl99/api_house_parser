@@ -4,99 +4,175 @@ import logging
 import re
 
 from . import BuildingExtractionStrategy
-from ..viewmodels import BuildingViewModel, ImageViewModel
-from app.settings import settings
+from ..viewmodels import BuildingViewModel
 
-import requests
+from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class UyBorExtractionStrategy(BuildingExtractionStrategy):
-    session: requests.Session
-    logger: logging.Logger
+    driver: webdriver.Chrome
 
-    def __init__(self) -> None:
-        super().__init__()
-        self.session = requests.Session()
-        self.session.request = partial(
-            lambda prefix, f, method, url, *
-            args, **kwargs: f(method, prefix + url, *args, **kwargs),
-            f'{settings.uybor_hostname}/api/{settings.uybor_api_version}', self.session.request
-        )
-        self.session.headers = {
-            'Accept': '*/*',
-            'Accept-Language': 'ru',
-            'Connection': 'keep-alive',
-            'Origin': 'https://uybor.uz',
-            'Referer': 'https://uybor.uz/',
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15'
-        }
-        self.logger = logging.getLogger("uybor-extraction")
+    def __init__(self):
+        options = webdriver.ChromeOptions()
+        options.headless = True
+
+        self.driver = webdriver.Chrome(options=options)
 
     def extract(self) -> Generator[List[BuildingViewModel], None, None]:
-        def convert_building(raw_building: dict):
-            building = BuildingViewModel(
-                territory=raw_building['region']['name']['ru'],
-                area=f"{raw_building['district']['name']['ru'] if raw_building['district'] else ''} "
-                     f"{raw_building['street']['name']['ru'] if raw_building['street'] else ''} "
-                     f"{raw_building['zone']['name']['ru'] if raw_building['zone'] else ''}",
-                sell_type=raw_building['operationType'],
-                room_number=int(
-                    re.search(r'\d+', raw_building['room']).group()) if raw_building['room'] else None,
-                land_area=raw_building['squareGround'] if 'squareGround' in raw_building else None,
-                building_area=raw_building['square'] if 'square' in raw_building else None,
-                price=raw_building['price'],
-                floor=raw_building['floor'] if 'floor' in raw_building else None,
-                floor_number=raw_building['floorTotal'] if 'floorTotal' in raw_building else None,
-                building_repair=raw_building['repair'] if 'repair' in raw_building else None,
-                type_of_ad=raw_building['user']['role'] if 'user' in raw_building and 'role' in raw_building['user'] else None,
-                source='uybor',
-                views=raw_building['views'] if 'views' in raw_building else None,
-                user_name=raw_building['user']['displayName'] if 'displayName' in raw_building['user'] else
-                raw_building['user']['firstName'] + ' ' + raw_building['user']['lastName'],
-                images=list(map(lambda raw_media: ImageViewModel(filename=raw_media['fileName'], url=raw_media['url']),
-                                raw_building['media']))
-            )
-            building.user_phone = self._extract_phone(raw_building['id'])
-            return building
+        config = self._get_config()
+        current_page = 1
+        for sale_type, categories in config.items():
+            for url_category in categories:
+                url = url_category['url']
+                category = url_category['category']
+                self.driver.get(url)
+                pagination_items = self.driver.find_elements(By.CSS_SELECTOR,
+                                                             'ul.MuiPagination-ul.mui-style-nhb8h9 li a')
+                max_page = int(pagination_items[-2].text)
+                while current_page <= max_page:
+                    wait = WebDriverWait(self.driver, 10).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, 'div.MuiGrid-root.MuiGrid-container'))
+                    )
+                    elements = self.driver.find_elements(By.CSS_SELECTOR,
+                                                         'div.MuiGrid-root.MuiGrid-container '
+                                                         'div.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-12'
+                                                         '.MuiGrid-grid-sm-6.MuiGrid-grid-xl-12')
+                    page_buildings: List[BuildingViewModel] = []
+                    for element in elements:
+                        territory = None
+                        area = None
+                        room = None
+                        building_area = None
+                        floor = None
+                        price = None
+                        floors_number = None
+                        views_count = None
+                        price_element = element.find_element(By.CSS_SELECTOR,
+                                                             'div.MuiTypography-root.MuiTypography-h4.mui-style-1b9kwdl')
+                        if price_element:
+                            price = price_element.text
+                            price = int(price.replace('у.е.', '').strip().replace(' ', ''))
+                        rooms_element = element.find_element(By.CSS_SELECTOR,
+                                                             'span.MuiTypography-root.MuiTypography-h6.mui-style-6q9hwm')
+                        if rooms_element:
+                            room = int(re.search(r'\d+', rooms_element.text).group())
+                        building_area_and_floors_elements = element.find_elements(By.CSS_SELECTOR,
+                                                                                  'div.MuiTypography-root.MuiTypography-body3.mui-style-14j8hnd')
+                        building_area_element = building_area_and_floors_elements[0] if len(
+                            building_area_and_floors_elements) > 0 else None
+                        if building_area_element:
+                            building_area = int(building_area_element.text.replace('м²', '').strip())
+                        floors_element = building_area_and_floors_elements[1] if len(
+                            building_area_and_floors_elements) > 1 else None
+                        if floors_element:
+                            floor, floors_number = floors_element.text.split('/')
+                        territory_and_area_element = element.find_element(By.CSS_SELECTOR,
+                                                                          'div.MuiTypography-root.MuiTypography-body3.mui-style-1kgu75x')
+                        if territory_and_area_element:
+                            splitted_territory = territory_and_area_element.text.split(', ')
+                            territory = splitted_territory[0]
+                            area = ', '.join(splitted_territory[1:])
+                        phone_button_element = element.find_element(By.CSS_SELECTOR,
+                                                                    'button[aria-label="show-phone-button"]')
+                        phone_button_element.click()
+                        user_phone = phone_button_element.text
+                        user_name_element = element.find_element(By.CSS_SELECTOR, 'div.MuiStack-root.mui-style-wdnt3x')
+                        user_name = user_name_element.find_element(By.CSS_SELECTOR,
+                                                                   'div.MuiBox-root.mui-style-0 div.MuiTypography-root.MuiTypography-caption.mui-style-rzapeq').text
+                        type_of_ad = user_name_element.find_element(By.CSS_SELECTOR,
+                                                                    'span.MuiTypography-root.MuiTypography-caption.mui-style-1tdgzzf').text
+                        element.find_element(By.CSS_SELECTOR, 'a.MuiBox-root.mui-style-1vssrzj').click()
 
-        self.logger.info(f"Start extracting buildings from {settings.uybor_hostname}/api/{settings.uybor_api_version}")
-        has_buildings = True
-        counter = 1
-        limit = 100
-        while has_buildings:
-            total, buildings = self._extract_buildings(
-                currency='usd', limit=limit)
-            has_buildings = len(buildings) != 0
-            self.logger.debug(f"Get {counter * limit}/{total} buildings")
-            yield list(map(convert_building, buildings))
-        self.logger.info("Done extracting buildings from {settings.uybor_hostname}/api/{settings.uybor_api_version}")
+                        self._switch_to_new_window()
 
-    def _get_categories(self) -> List[dict]:
-        return self.session.get('/listings/categories', params={'limit': 999}).json()
+                        views_elements = WebDriverWait(self.driver, 10).until(
+                            EC.presence_of_all_elements_located((By.CSS_SELECTOR,
+                                                                 'div.MuiStack-root.MuiBox-root.mui-style-2b1uda div.MuiTypography-root.MuiTypography-body3.mui-style-1265kty'))
+                        )
+                        if len(views_elements) > 1:
+                            views_element = views_elements[1]
+                            views_count_text = views_element.find_element(By.TAG_NAME, 'strong').text
+                            views_count = int(re.search(r'\d+', views_count_text).group())
 
-    def _extract_buildings(self, currency: str, limit: int = 20, operation_type: str = None, category_id: int = None,
-                           page: int = 1) -> Tuple[int, List[dict]]:
-        if currency not in ['usd', 'uzs']:
-            raise ValueError(f"Incorrect currency {currency}")
-        params = {
-            'includeFeatured': True,
-            'limit': limit,
-            'embed': 'category,subCategory,residentialComplex,region,city,district,zone,street,metro,user,media',
-            'priceCurrency__eq': currency,
-            'page': page
+                        building_repair_element = \
+                        self.driver.find_elements(By.CSS_SELECTOR, 'div.MuiStack-root.mui-style-ekcp1r')[3]
+                        building_repair = building_repair_element.find_element(By.CSS_SELECTOR,
+                                                                               'div.MuiTypography-root.MuiTypography-body3.mui-style-xckitu').get_attribute(
+                            "innerHTML")
+
+                        self._close_window()
+                        page_buildings.append(BuildingViewModel(
+                            territory=territory,
+                            area=area,
+                            sell_type=sale_type,
+                            room_number=room,
+                            land_area=None,
+                            building_area=building_area,
+                            price=price,
+                            floor=floor,
+                            floor_number=floors_number,
+                            building_repair=building_repair,
+                            type_of_ad=type_of_ad,
+                            source='uybor',
+                            views=views_count,
+                            user_name=user_name,
+                            user_phone=user_phone
+                        ))
+                    yield page_buildings
+                    current_page += 1
+                    self._change_page(url, current_page)
+
+    def _switch_to_new_window(self):
+        parent = self.driver.current_window_handle
+        windows = self.driver.window_handles
+        for window in windows:
+            if window != parent:
+                self.driver.switch_to.window(window)
+
+    def _close_window(self):
+        windows = self.driver.window_handles
+        self.driver.switch_to.window(windows[0])
+
+    def _change_page(self, url: str, page: int):
+        url += f'&page={page}'
+        self.driver.get(url)
+
+    @staticmethod
+    def _get_config() -> dict:
+        return {
+            'sale': [
+                {
+                    'url': 'https://uybor.uz/listings?operationType__eq=sale&category__eq=7',
+                    'category': 'Квартира'
+                },
+                {
+                    'url': 'https://uybor.uz/listings?operationType__eq=sale&category__eq=8',
+                    'category': 'Дом'
+                },
+                {
+                    'url': 'https://uybor.uz/listings?operationType__eq=sale&category__eq=11',
+                    'category': 'Земельный участок'
+                },
+                {
+                    'url': 'https://uybor.uz/listings?operationType__eq=sale&category__eq=10',
+                    'category': 'Для бизнеса'
+                },
+            ],
+            'rent': [
+                {
+                    'url': 'https://uybor.uz/listings?operationType__eq=rent&category__eq=7',
+                    'category': 'Квартира',
+                },
+                {
+                    'url': 'https://uybor.uz/listings?operationType__eq=rent&category__eq=8',
+                    'category': 'Дом',
+                },
+                {
+                    'url': 'https://uybor.uz/listings?operationType__eq=rent&category__eq=10',
+                    'category': 'Для бизнеса',
+                },
+            ]
         }
-        if operation_type:
-            params['operationType__eq'] = operation_type
-        if category_id:
-            params['category__eq'] = category_id
-        response: requests.Response = self.session.get(
-            '/listings', params=params)
-        data = response.json()
-        return data['total'], data['results']
-
-    def _extract_phone(self, building_id: int) -> str | None:
-        response: requests.Response = self.session.get(f"/listings/{building_id}/phone")
-        data: dict = response.json()
-        if 'phone' in data:
-            return data['phone']
-        return None
