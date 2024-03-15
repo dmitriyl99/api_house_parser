@@ -25,6 +25,8 @@ def upgrade() -> None:
         sa.Column('name', sa.String(100), nullable=False),
         sa.Column('parent_id', sa.BigInteger, nullable=True)
     )
+    op.execute("INSERT INTO categories (name, parent_id) VALUES ('Квартира', NULL), ('Дом', NULL), "
+               "('Земельный участок', NULL), ('Для бизнеса', NULL)")
 
 
 def downgrade() -> None:
