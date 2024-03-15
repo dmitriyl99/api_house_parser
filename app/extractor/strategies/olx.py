@@ -88,6 +88,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
                 user_phone=user_phone,
                 images=images,
                 views=views,
+                olx_id=raw_building['id']
             )
 
         self.logger.info(f"Start extracting buildings from {settings.olx_hostname}/api/{settings.olx_api_version}")
