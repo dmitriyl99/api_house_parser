@@ -21,7 +21,7 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     op.create_table(
         "images", 
-        sa.Column("id", sa.BigInteger, primary_key=True),
+        sa.Column('id', sa.Integer, autoincrement=True, primary_key=True),
         sa.Column("filename", sa.String(200)),
         sa.Column("url", sa.String(500), nullable=True),
         sa.Column("building_id", sa.Integer, sa.ForeignKey("buildings.id"))

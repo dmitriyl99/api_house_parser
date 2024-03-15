@@ -4,6 +4,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from app import scheduler
+from app.dal.repositories import buildings
 
 
 logging.basicConfig(
@@ -26,4 +27,4 @@ app = FastAPI(lifespan=lifespan)
 
 @app.get("/api/buildings")
 async def get_buildings():
-    pass
+    return buildings.get_buildings()

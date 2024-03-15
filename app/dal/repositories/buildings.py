@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Type
 
 from sqlalchemy.orm import Session
 
@@ -22,3 +22,8 @@ def save_building(object: Building, images: List[Image] | None = None):
                 image.building_id = object.id
                 session.add(image)
             session.commit()
+
+
+def get_buildings() -> List[Type[Building]]:
+    with Session(engine) as session:
+        return session.query(Building).all()

@@ -16,7 +16,7 @@ class BuildingViewModel(BaseModel):
     room_number: int | None = None
     land_area: float | None = None
     building_area: float | None
-    price: int
+    price: float
     floor: int | None = None
     floor_number: int | None = None
     building_repair: str | None = None
