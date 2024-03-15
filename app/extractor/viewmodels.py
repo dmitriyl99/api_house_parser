@@ -26,5 +26,6 @@ class BuildingViewModel(BaseModel):
     user_name: str | None = None
     user_phone: str | None = None
     category_id: int | None = None
+    olx_id: int | None = None
 
     images: List[ImageViewModel]

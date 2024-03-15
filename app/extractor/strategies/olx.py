@@ -8,6 +8,7 @@ import requests
 from . import BuildingExtractionStrategy
 from ..viewmodels import BuildingViewModel, ImageViewModel
 from app.dal.models import Building
+from app.dal.repositories import buildings as buildings_repository
 
 from app.settings import settings
 
@@ -143,9 +144,15 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
                     break
                 buildings: List[dict] = self._extract_building(param['olx_category_id'], offset, limit)
                 has_buildings = len(buildings) != 0
-                self.logger.debug(f"Get {counter * limit} buildings")
+                self.logger.info(f"Get {counter * limit} buildings")
                 offset += limit
-                yield list(map(lambda x: convert_building(x, param['sell_type'], param['category']), buildings))
+                buildings_to_yield = []
+                for building in buildings:
+                    building_exists = buildings_repository.get_building_by_olx_id(building['id'])
+                    if building_exists:
+                        continue
+                    buildings_to_yield.append(convert_building(building, param['sell_type'], param['category']))
+                yield buildings_to_yield
 
     def _extract_building(self, category_id: int = 1, offset: int = 0, limit: int = 50) -> List[dict]:
         response: requests.Response = self.session.get(

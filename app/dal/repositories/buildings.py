@@ -27,3 +27,8 @@ def save_building(object: Building, images: List[Image] | None = None):
 def get_buildings() -> List[Type[Building]]:
     with Session(engine) as session:
         return session.query(Building).all()
+
+
+def get_building_by_olx_id(olx_id: int) -> Type[Building]:
+    with Session(engine) as session:
+        return session.query(Building).filter(Building.olx_id == olx_id).first()

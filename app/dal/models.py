@@ -38,6 +38,7 @@ class Building(Base):
     views: Mapped[int] = mapped_column(Integer)
     user_name: Mapped[str] = mapped_column(String(200))
     user_phone: Mapped[str] = mapped_column(String(200))
+    olx_id: Mapped[int] = mapped_column(BigInteger)
 
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
 

@@ -39,7 +39,8 @@ def _save_building_to_repository(building: BuildingViewModel):
         source=building.source,
         views=building.views,
         user_name=building.user_name,
-        user_phone=building.user_phone
+        user_phone=building.user_phone,
+        olx_id=building.olx_id,
     ), list(map(lambda x: Image(
         filename=x.filename,
         url=x.url
