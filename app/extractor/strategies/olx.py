@@ -8,7 +8,7 @@ import requests
 from . import BuildingExtractionStrategy
 from ..viewmodels import BuildingViewModel, ImageViewModel
 from app.dal.models import Building
-from app.dal.repositories import buildings as buildings_repository
+from app.dal.repositories import buildings as buildings_repository, category as category_repository
 
 from app.settings import settings
 
@@ -28,7 +28,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
         self.logger = logging.getLogger("olx-extraction")
 
     def extract(self) -> Generator[List[Building], None, None]:
-        def convert_building(raw_building: dict, sell_type: str, category: str) -> BuildingViewModel:
+        def convert_building(raw_building: dict, sell_type: str, category_id: int) -> BuildingViewModel:
             time.sleep(0.5)
 
             def find_param(params: List[dict], param_name: str):
@@ -88,7 +88,8 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
                 user_phone=user_phone,
                 images=images,
                 views=views,
-                olx_id=raw_building['id']
+                olx_id=raw_building['id'],
+                category_id=category_id,
             )
 
         self.logger.info(f"Start extracting buildings from {settings.olx_hostname}/api/{settings.olx_api_version}")
@@ -140,6 +141,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
             }
         ]
         for param in category_sell_type_param:
+            category = category_repository.find_category_by_name(param['category'])
             while has_buildings:
                 if offset > max_offset:
                     break
@@ -152,7 +154,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
                     building_exists = buildings_repository.get_building_by_olx_id(building['id'])
                     if building_exists:
                         continue
-                    buildings_to_yield.append(convert_building(building, param['sell_type'], param['category']))
+                    buildings_to_yield.append(convert_building(building, param['sell_type'], category.id))
                 yield buildings_to_yield
 
     def _extract_building(self, category_id: int = 1, offset: int = 0, limit: int = 50) -> List[dict]:

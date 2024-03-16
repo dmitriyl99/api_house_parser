@@ -16,6 +16,7 @@ class Category(Base):
 
     parent: Mapped["Category"] = relationship(back_populates='children')
     children: Mapped[List["Category"]] = relationship()
+    buildings: Mapped['Building'] = relationship(back_populates='category')
 
 
 class Building(Base):
@@ -41,6 +42,7 @@ class Building(Base):
     olx_id: Mapped[int] = mapped_column(BigInteger)
 
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
+    category: Mapped[Category] = relationship()
 
 
 class Image(Base):
