@@ -26,7 +26,7 @@ def save_building(object: Building, images: List[Image] | None = None):
 
 def get_buildings() -> List[Type[Building]]:
     with Session(engine) as session:
-        return session.query(Building).options(joinedload(Building.categ)).all()
+        return session.query(Building).options(joinedload(Building.category)).all()
 
 
 def get_building_by_olx_id(olx_id: int) -> Type[Building]:
