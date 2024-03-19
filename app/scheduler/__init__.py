@@ -9,7 +9,7 @@ _scheduler = BackgroundScheduler()
 
 
 def start():
-    trigger = OrTrigger([CronTrigger(hour=12, minute=0), CronTrigger(hour=24, minute=0)])
+    trigger = OrTrigger([CronTrigger(hour=12, minute=0), CronTrigger(hour=0, minute=0)])
     # _scheduler.add_job(parse_uybor, trigger=trigger, id='parse_uybor', replace_existing=True)
     _scheduler.add_job(parse_olx, trigger=trigger, id='parse_olx', replace_existing=True)
     _scheduler.start()
