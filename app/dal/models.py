@@ -43,6 +43,7 @@ class Building(Base):
 
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
     category: Mapped[Category] = relationship()
+    images: Mapped[List['Image']] = relationship(back_populates='building')
 
 
 class Image(Base):
@@ -53,3 +54,4 @@ class Image(Base):
     url: Mapped[str] = mapped_column(String(500))
 
     building_id: Mapped[int] = mapped_column(ForeignKey("buildings.id"))
+    building: Mapped["Building"] = relationship()
