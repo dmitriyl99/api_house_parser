@@ -90,6 +90,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
                 views=views,
                 olx_id=raw_building['id'],
                 category_id=category_id,
+                url=raw_building['url'],
             )
 
         self.logger.info(f"Start extracting buildings from {settings.olx_hostname}/api/{settings.olx_api_version}")
