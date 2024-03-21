@@ -159,7 +159,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
 
     def _extract_building(self, category_id: int = 1, offset: int = 0, limit: int = 50) -> List[dict]:
         response: requests.Response = self.session.get(
-            '/offers/', params={'category_id': 1, 'offset': offset, 'limit': limit}
+            '/offers/', params={'category_id': category_id, 'offset': offset, 'limit': limit}
         )
         if response.status_code != 200:
             print(response.json())
