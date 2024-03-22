@@ -136,7 +136,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                 area=area,
                                 sell_type=sale_type,
                                 room_number=room,
-                                land_area=None,
+                                land_area=land_area,
                                 building_area=building_area,
                                 price=price,
                                 floor=floor,

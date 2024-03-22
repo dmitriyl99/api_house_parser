@@ -34,7 +34,7 @@ class Building(Base):
     floor_number: Mapped[int] = mapped_column(Integer)
     building_repair: Mapped[str] = mapped_column(Text)
     type_of_ad: Mapped[str] = mapped_column(String(100))
-    created_at: Mapped[datetime] = mapped_column(DateTime)
+    created_at: Mapped[datetime] = mapped_column(DateTime, onupdate=datetime.now)
     source: Mapped[str] = mapped_column(String(20))
     views: Mapped[int] = mapped_column(Integer)
     user_name: Mapped[str] = mapped_column(String(200))
