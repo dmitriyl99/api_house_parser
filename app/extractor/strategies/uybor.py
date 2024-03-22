@@ -149,7 +149,8 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                 user_phone=user_phone,
                                 images=[],
                                 uybor_id=uybor_id,
-                                category_id=category_entity.id
+                                category_id=category_entity.id,
+                                url=detailed_element_link_href,
                             ))
                         print("Parsed", len(page_buildings), "elements on page", current_page)
                         yield page_buildings
