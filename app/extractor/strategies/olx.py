@@ -90,6 +90,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
                 views=views,
                 olx_id=raw_building['id'],
                 category_id=category_id,
+                url=raw_building['url'],
             )
 
         self.logger.info(f"Start extracting buildings from {settings.olx_hostname}/api/{settings.olx_api_version}")
@@ -159,7 +160,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
 
     def _extract_building(self, category_id: int = 1, offset: int = 0, limit: int = 50) -> List[dict]:
         response: requests.Response = self.session.get(
-            '/offers/', params={'category_id': 1, 'offset': offset, 'limit': limit}
+            '/offers/', params={'category_id': category_id, 'offset': offset, 'limit': limit}
         )
         if response.status_code != 200:
             print(response.json())

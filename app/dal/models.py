@@ -41,6 +41,7 @@ class Building(Base):
     user_phone: Mapped[str] = mapped_column(String(200))
     olx_id: Mapped[int] = mapped_column(BigInteger)
     uybor_id: Mapped[int] = mapped_column(Integer)
+    url: Mapped[str] = mapped_column(String(200))
 
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
     category: Mapped[Category] = relationship()

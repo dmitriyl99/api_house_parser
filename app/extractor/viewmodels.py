@@ -28,5 +28,6 @@ class BuildingViewModel(BaseModel):
     category_id: int | None = None
     olx_id: int | None = None
     uybor_id: int | None = None
+    url: str | None = None
 
     images: List[ImageViewModel]
