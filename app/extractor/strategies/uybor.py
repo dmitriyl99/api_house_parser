@@ -26,7 +26,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
     def extract(self) -> Generator[List[BuildingViewModel], None, None]:
         try:
             config = self._get_config()
-            current_page = 1
+            current_page = 2
             for sale_type, categories in config.items():
                 for url_category in categories:
                     url = url_category['url']
@@ -40,16 +40,18 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                     )
                     pagination_items = self.driver.find_elements(By.CSS_SELECTOR,
                                                                  'ul.MuiPagination-ul.mui-style-nhb8h9 li a')
-                    print(len(pagination_items))
                     max_page = int(pagination_items[-2].text)
                     while current_page <= max_page:
                         wait = WebDriverWait(self.driver, 10).until(
-                            EC.presence_of_element_located((By.CSS_SELECTOR, 'div.MuiGrid-root.MuiGrid-container'))
+                            EC.presence_of_element_located((By.CSS_SELECTOR, 'div.MuiGrid-root.MuiGrid-container '
+                                                             'div.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-12'
+                                                             '.MuiGrid-grid-sm-6.MuiGrid-grid-xl-12.mui-style-xey18y'))
                         )
                         elements = self.driver.find_elements(By.CSS_SELECTOR,
                                                              'div.MuiGrid-root.MuiGrid-container '
                                                              'div.MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-12'
-                                                             '.MuiGrid-grid-sm-6.MuiGrid-grid-xl-12')
+                                                             '.MuiGrid-grid-sm-6.MuiGrid-grid-xl-12.mui-style-xey18y')
+                        print("Found", len(elements), 'elements on page', current_page)
                         page_buildings: List[BuildingViewModel] = []
                         for element in elements:
                             territory = None
@@ -66,7 +68,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                                                  'div.MuiTypography-root.MuiTypography-h4.mui-style-1b9kwdl')
                             if price_element:
                                 price = price_element.text
-                                price = int(price.replace('у.е.', '').strip().replace(' ', ''))
+                                price = int(float(price.replace('у.е.', '').strip().replace(' ', '')))
                             territory_and_area_element = element.find_element(By.CSS_SELECTOR,
                                                                               'div.MuiTypography-root.MuiTypography-body3.mui-style-1kgu75x')
                             if territory_and_area_element:
@@ -140,6 +142,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                 user_phone=user_phone,
                                 images=[],
                             ))
+                        print("Parsed", len(page_buildings), "elements on page", current_page)
                         yield page_buildings
                         current_page += 1
                         self._change_page(url, current_page)
@@ -156,6 +159,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
 
     def _close_window(self):
         windows = self.driver.window_handles
+        self.driver.close()
         self.driver.switch_to.window(windows[0])
 
     def _change_page(self, url: str, page: int):
