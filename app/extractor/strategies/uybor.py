@@ -7,7 +7,7 @@ import selenium.common.exceptions
 
 from . import BuildingExtractionStrategy
 from ..viewmodels import BuildingViewModel
-from app.dal.repositories import buildings as buildings_repository
+from app.dal.repositories import buildings as buildings_repository, category as categories_repository
 
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
@@ -32,6 +32,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                 for url_category in categories:
                     url = url_category['url']
                     category = url_category['category']
+                    category_entity = categories_repository.find_category_by_name(category)
                     self.driver.get(url)
                     wait = WebDriverWait(self.driver, 10).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, 'div.MuiGrid-root.MuiGrid-container'))
@@ -147,7 +148,8 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                 user_name=user_name,
                                 user_phone=user_phone,
                                 images=[],
-                                uybor_id=uybor_id
+                                uybor_id=uybor_id,
+                                category_id=category_entity.id
                             ))
                         print("Parsed", len(page_buildings), "elements on page", current_page)
                         yield page_buildings
