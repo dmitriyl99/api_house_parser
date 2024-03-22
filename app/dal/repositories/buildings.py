@@ -32,3 +32,8 @@ def get_buildings() -> List[Type[Building]]:
 def get_building_by_olx_id(olx_id: int) -> Type[Building]:
     with Session(engine) as session:
         return session.query(Building).filter(Building.olx_id == olx_id).first()
+
+
+def find_building_by_uybor_id(uybor_id: int) -> Type[Building]:
+    with Session(engine) as session:
+        return session.query(Building).filter(Building.uybor_id == uybor_id).first()

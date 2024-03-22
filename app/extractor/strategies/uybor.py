@@ -7,6 +7,7 @@ import selenium.common.exceptions
 
 from . import BuildingExtractionStrategy
 from ..viewmodels import BuildingViewModel
+from app.dal.repositories import buildings as buildings_repository
 
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
@@ -54,6 +55,13 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                         print("Found", len(elements), 'elements on page', current_page)
                         page_buildings: List[BuildingViewModel] = []
                         for element in elements:
+                            detailed_element_link = element.find_element(By.CSS_SELECTOR,
+                                                                         'a.MuiBox-root.mui-style-1vssrzj')
+                            detailed_element_link_href = detailed_element_link.get_attribute('href')
+                            uybor_id = int(detailed_element_link_href.split('/')[-1])
+                            building = buildings_repository.find_building_by_uybor_id(uybor_id)
+                            if building:
+                                continue
                             territory = None
                             area = None
                             room = None
@@ -78,18 +86,16 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                             phone_button_element = element.find_element(By.CSS_SELECTOR,
                                                                         'button[aria-label="show-phone-button"]')
                             phone_button_element.click()
+                            self.driver.implicitly_wait(0.5)
                             user_phone = phone_button_element.text
                             user_name_element = element.find_element(By.CSS_SELECTOR, 'div.MuiStack-root.mui-style-wdnt3x')
                             user_name = user_name_element.find_element(By.CSS_SELECTOR,
                                                                        'div.MuiBox-root.mui-style-0 div.MuiTypography-root.MuiTypography-caption.mui-style-rzapeq').text
                             type_of_ad = user_name_element.find_element(By.CSS_SELECTOR,
                                                                         'span.MuiTypography-root.MuiTypography-caption.mui-style-1tdgzzf').text
-                            element.find_element(By.CSS_SELECTOR, 'a.MuiBox-root.mui-style-1vssrzj').click()
-
+                            detailed_element_link.click()
                             self._switch_to_new_window()
-
                             views_elements = []
-
                             try:
                                 views_elements = WebDriverWait(self.driver, 10).until(
                                     EC.presence_of_all_elements_located((By.CSS_SELECTOR,
@@ -141,6 +147,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                 user_name=user_name,
                                 user_phone=user_phone,
                                 images=[],
+                                uybor_id=uybor_id
                             ))
                         print("Parsed", len(page_buildings), "elements on page", current_page)
                         yield page_buildings
