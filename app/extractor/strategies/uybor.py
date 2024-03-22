@@ -1,6 +1,4 @@
 from typing import List, Tuple, Generator
-from functools import partial
-import logging
 import re
 
 import selenium.common.exceptions
@@ -8,6 +6,7 @@ import selenium.common.exceptions
 from . import BuildingExtractionStrategy
 from ..viewmodels import BuildingViewModel
 from app.dal.repositories import buildings as buildings_repository, category as categories_repository
+from .waits_conditions import element_has_unsecured_phone
 
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
@@ -87,7 +86,12 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                             phone_button_element = element.find_element(By.CSS_SELECTOR,
                                                                         'button[aria-label="show-phone-button"]')
                             phone_button_element.click()
-                            self.driver.implicitly_wait(0.5)
+                            wait = WebDriverWait(self.driver, 20)
+                            try:
+                                phone_button_element = wait.until(element_has_unsecured_phone((By.CSS_SELECTOR,
+                                                                                               'button[aria-label="show-phone-button"]')))
+                            except selenium.common.exceptions.TimeoutException:
+                                pass
                             user_phone = phone_button_element.text
                             user_name_element = element.find_element(By.CSS_SELECTOR, 'div.MuiStack-root.mui-style-wdnt3x')
                             user_name = user_name_element.find_element(By.CSS_SELECTOR,
@@ -117,7 +121,10 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                 value = info_panel_element.find_element(By.CSS_SELECTOR,
                                                                         'div.MuiTypography-root.MuiTypography-subtitle2.mui-style-fu5la2').text
                                 if title == 'Комнат':
-                                    room = int(value)
+                                    try:
+                                        room = int(value)
+                                    except ValueError:
+                                        room = -1
                                 if title == 'Площадь Земли':
                                     land_area = float(value.replace('сот.', '').strip())
                                 if title == 'Площадь':
