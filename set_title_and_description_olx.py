@@ -10,7 +10,7 @@ for building in buildings:
     if building.title:
         continue
     response = requests.get(f'https://www.olx.uz/api/v1/offers/{building.olx_id}')
-    data = response.json()
+    data = response.json()['data']
     building_repository.set_title_and_description(
         building.id, data['title'], re.sub(clean_html_regex, '', data['description'])
     )
