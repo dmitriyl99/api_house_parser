@@ -4,8 +4,5 @@ from app.dal.repositories import engine
 
 
 with engine.connect() as connection:
-    connection.execute(text("""SELECT REPLACE(images.url, ';s={width}x{height}', '')
-from images
-         JOIN buildings b on b.id = images.building_id
-WHERE b.source = 'olx'"""))
+    connection.execute(text("""UPDATE images SET url = REPLACE(url, ';s={width}x{height}', '')"""))
 
