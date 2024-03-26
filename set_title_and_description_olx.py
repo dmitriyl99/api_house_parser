@@ -14,7 +14,10 @@ for building in buildings:
         continue
     if type(response.json()) is list:
         continue
-    data = response.json()['data']
+    try:
+        data = response.json()['data']
+    except Exception:
+        continue
     building_repository.set_title_and_description(
         building.id, data['title'], re.sub(clean_html_regex, '', data['description'])
     )
