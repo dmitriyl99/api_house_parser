@@ -3,6 +3,7 @@ import re
 import os
 from urllib.parse import urlparse
 
+import requests
 import selenium.common.exceptions
 
 from . import BuildingExtractionStrategy
@@ -90,7 +91,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                             phone_button_element.click()
                             wait = WebDriverWait(self.driver, 20)
                             try:
-                                phone_button_element = wait.until(element_has_unsecured_phone((By.CSS_SELECTOR,
+                                phone_button_element = wait.until(element_has_unsecured_phone(element, (By.CSS_SELECTOR,
                                                                                                'button[aria-label="show-phone-button"]')))
                             except selenium.common.exceptions.TimeoutException:
                                 pass
@@ -167,7 +168,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                 views=views_count,
                                 user_name=user_name,
                                 user_phone=user_phone,
-                                images=[],
+                                images=images_view_models,
                                 uybor_id=uybor_id,
                                 category_id=category_entity.id,
                                 url=detailed_element_link_href,
