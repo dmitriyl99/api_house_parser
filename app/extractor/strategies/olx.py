@@ -64,7 +64,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
                 map(
                     lambda x: ImageViewModel(
                         filename=x['filename'],
-                        url=x['link']
+                        url=x['link'].replace(';s={width}x{height}', '')
                     ), raw_building['photos']
                 )
             )
