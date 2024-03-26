@@ -12,6 +12,8 @@ for building in buildings:
     response = requests.get(f'https://www.olx.uz/api/v1/offers/{building.olx_id}')
     if response.status_code == 410:
         continue
+    if type(response.json()) is list:
+        continue
     data = response.json()['data']
     building_repository.set_title_and_description(
         building.id, data['title'], re.sub(clean_html_regex, '', data['description'])
