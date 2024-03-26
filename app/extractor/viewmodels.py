@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class ImageViewModel(BaseModel):
-    filename: str
+    filename: str | None = None
     url: str
 
 

@@ -1,10 +1,12 @@
 from typing import List, Tuple, Generator
 import re
+import os
+from urllib.parse import urlparse
 
 import selenium.common.exceptions
 
 from . import BuildingExtractionStrategy
-from ..viewmodels import BuildingViewModel
+from ..viewmodels import BuildingViewModel, ImageViewModel
 from app.dal.repositories import buildings as buildings_repository, category as categories_repository
 from .waits_conditions import element_has_unsecured_phone
 
@@ -136,6 +138,17 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                         floor, floors_number = value.split('/')
                                     else:
                                         floor = int(value)
+
+                            images = self.driver.find_elements(By.CSS_SELECTOR, 'div.mui-style-8t4qp8 img')
+
+                            images_view_models = list(
+                                map(
+                                    lambda x: ImageViewModel(
+                                        url=x.get_attribute('src'),
+                                        filename=None
+                                    ), images
+                                )
+                            )
 
                             self._close_window()
                             page_buildings.append(BuildingViewModel(
