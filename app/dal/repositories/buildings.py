@@ -32,7 +32,7 @@ def get_buildings() -> List[Type[Building]]:
 
 def get_olx_buildings() -> List[Type[Building]]:
     with Session(engine) as session:
-        return session.query(Building).filter(Building.olx_id.isnot(None)).filter(Building.title.is_(None)).all()
+        return session.query(Building).filter(Building.olx_id.isnot(None)).all()
 
 
 def set_title_and_description(building_id, title, description):
