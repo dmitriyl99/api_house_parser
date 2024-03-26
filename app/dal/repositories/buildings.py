@@ -1,5 +1,6 @@
 from typing import List, Type
 
+from sqlalchemy import text
 from sqlalchemy.orm import Session, joinedload
 
 from . import engine
@@ -27,6 +28,17 @@ def save_building(object: Building, images: List[Image] | None = None):
 def get_buildings() -> List[Type[Building]]:
     with Session(engine) as session:
         return session.query(Building).options(joinedload(Building.category), joinedload(Building.images)).all()
+
+
+def get_olx_buildings() -> List[Type[Building]]:
+    with Session(engine) as session:
+        return session.query(Building).filter(Building.olx_id.isnot(None)).filter(Building.title.is_(None)).all()
+
+
+def set_title_and_description(building_id, title, description):
+    with Session(engine) as session:
+        session.query(Building).filter(Building.id == building_id).update({'title': title, 'description': description})
+        session.commit()
 
 
 def get_building_by_olx_id(olx_id: int) -> Type[Building]:

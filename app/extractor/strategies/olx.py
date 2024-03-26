@@ -2,6 +2,7 @@ from typing import List, Generator
 from functools import partial
 import logging
 import time
+import re
 
 import requests
 
@@ -28,6 +29,7 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
         self.logger = logging.getLogger("olx-extraction")
 
     def extract(self) -> Generator[List[Building], None, None]:
+        clean_html_regex = re.compile('<.*?>')
         def convert_building(raw_building: dict, sell_type: str, category_id: int) -> BuildingViewModel:
             time.sleep(0.5)
 
@@ -72,6 +74,8 @@ class OlxExtractionStrategy(BuildingExtractionStrategy):
             views = OlxExtractionStrategy._extract_views_for_building(raw_building['id'])
 
             return BuildingViewModel(
+                title=raw_building['title'],
+                description=re.sub(clean_html_regex, '', raw_building['description']),
                 territory=territory,
                 area=area,
                 price=price,

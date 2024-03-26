@@ -25,6 +25,8 @@ def parse_olx():
 
 def _save_building_to_repository(building: BuildingViewModel):
     buildings_repository.save_building(Building(
+        title=building.title,
+        description=building.description,
         territory=building.territory,
         area=building.area,
         sell_type=building.sell_type,

@@ -23,6 +23,8 @@ class Building(Base):
     __tablename__ = 'buildings'
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    title: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text)
     territory: Mapped[str] = mapped_column(String(100))
     area: Mapped[int] = mapped_column(String(100))
     sell_type: Mapped[str] = mapped_column(String(20))

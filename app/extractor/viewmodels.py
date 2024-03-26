@@ -10,6 +10,8 @@ class ImageViewModel(BaseModel):
 
 
 class BuildingViewModel(BaseModel):
+    title: str
+    description: str
     territory: str
     area: str
     sell_type: str
