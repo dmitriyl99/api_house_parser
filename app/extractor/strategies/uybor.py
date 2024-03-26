@@ -29,7 +29,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
     def extract(self) -> Generator[List[BuildingViewModel], None, None]:
         try:
             config = self._get_config()
-            current_page = 2
+            current_page = 1
             for sale_type, categories in config.items():
                 for url_category in categories:
                     url = url_category['url']
