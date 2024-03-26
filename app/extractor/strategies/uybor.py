@@ -103,6 +103,8 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                                                                         'span.MuiTypography-root.MuiTypography-caption.mui-style-1tdgzzf').text
                             detailed_element_link.click()
                             self._switch_to_new_window()
+                            title = self.driver.find_element(By.CSS_SELECTOR, 'h1.MuiTypography-root.MuiTypography-h2.mui-style-1tyknu').text
+                            description = self.driver.find_element(By.CSS_SELECTOR, 'p.MuiTypography-root.MuiTypography-body2.mui-style-qra2cp').text
                             views_elements = []
                             try:
                                 views_elements = WebDriverWait(self.driver, 10).until(
@@ -119,22 +121,22 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                             info_panel_elements = self.driver.find_elements(By.CSS_SELECTOR,
                                                                             'div.MuiStack-root.mui-style-zjvyc7')
                             for info_panel_element in info_panel_elements:
-                                title = info_panel_element.find_element(By.CSS_SELECTOR,
+                                info_panel_title = info_panel_element.find_element(By.CSS_SELECTOR,
                                                                         'div.MuiTypography-root.MuiTypography-overline.mui-style-1xqesu').text
                                 value = info_panel_element.find_element(By.CSS_SELECTOR,
                                                                         'div.MuiTypography-root.MuiTypography-subtitle2.mui-style-fu5la2').text
-                                if title == 'Комнат':
+                                if info_panel_title == 'Комнат':
                                     try:
                                         room = int(value)
                                     except ValueError:
                                         room = -1
-                                if title == 'Площадь Земли':
+                                if info_panel_title == 'Площадь Земли':
                                     land_area = float(value.replace('сот.', '').strip())
-                                if title == 'Площадь':
+                                if info_panel_title == 'Площадь':
                                     building_area = float(value.replace('м²', '').strip())
-                                if title == 'Ремонт':
+                                if info_panel_title == 'Ремонт':
                                     building_repair = value
-                                if title == 'Этаж':
+                                if info_panel_title == 'Этаж':
                                     if '/' in value:
                                         floor, floors_number = value.split('/')
                                     else:
@@ -153,6 +155,8 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
 
                             self._close_window()
                             page_buildings.append(BuildingViewModel(
+                                title=title,
+                                description=description,
                                 territory=territory,
                                 area=area,
                                 sell_type=sale_type,
