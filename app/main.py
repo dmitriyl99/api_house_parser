@@ -26,5 +26,5 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/api/buildings")
-async def get_buildings():
-    return buildings.get_buildings()
+async def get_buildings(page: int = 1, source: str | None = None):
+    return buildings.get_buildings(source, page)

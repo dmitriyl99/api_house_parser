@@ -25,9 +25,13 @@ def save_building(object: Building, images: List[Image] | None = None):
             session.commit()
 
 
-def get_buildings() -> List[Type[Building]]:
+def get_buildings(source: str = None, page: int = 1, per_page: int = 20) -> List[Type[Building]]:
     with Session(engine) as session:
-        return session.query(Building).options(joinedload(Building.category), joinedload(Building.images)).all()
+        query = session.query(Building).options(joinedload(Building.category), joinedload(Building.images))
+        if source:
+            query = query.filter(Building.source == source)
+        items = query.limit(per_page).offset((page - 1) * per_page).all()
+        return items
 
 
 def get_olx_buildings() -> List[Type[Building]]:
