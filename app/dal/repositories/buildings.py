@@ -27,7 +27,7 @@ def save_building(object: Building, images: List[Image] | None = None):
 
 def get_buildings(source: str = None, page: int = 1, per_page: int = 20) -> List[Type[Building]]:
     with Session(engine) as session:
-        query = session.query(Building).options(joinedload(Building.category), joinedload(Building.images))
+        query = session.query(Building).options(joinedload(Building.category), joinedload(Building.images)).order_by(Building.created_at.desc())
         if source:
             query = query.filter(Building.source == source)
         items = query.limit(per_page).offset((page - 1) * per_page).all()
