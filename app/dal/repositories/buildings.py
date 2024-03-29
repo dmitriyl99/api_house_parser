@@ -53,3 +53,10 @@ def get_building_by_olx_id(olx_id: int) -> Type[Building]:
 def find_building_by_uybor_id(uybor_id: int) -> Type[Building]:
     with Session(engine) as session:
         return session.query(Building).filter(Building.uybor_id == uybor_id).first()
+
+
+def remove_buildings_after_days(days: int = 30):
+    with Session(engine) as session:
+        return session.execute(text(
+            f"""DELETE FROM buildings WHERE buildings.created_at <= date('now', '-{days} day')"""
+        ))

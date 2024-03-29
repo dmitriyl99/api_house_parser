@@ -89,7 +89,7 @@ class UyBorExtractionStrategy(BuildingExtractionStrategy):
                             phone_button_element = element.find_element(By.CSS_SELECTOR,
                                                                         'button[aria-label="show-phone-button"]')
                             phone_button_element.click()
-                            wait = WebDriverWait(self.driver, 20)
+                            wait = WebDriverWait(self.driver, 3)
                             try:
                                 phone_button_element = wait.until(element_has_unsecured_phone(element, (By.CSS_SELECTOR,
                                                                                                'button[aria-label="show-phone-button"]')))

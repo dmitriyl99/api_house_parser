@@ -23,6 +23,10 @@ def parse_olx():
             _save_building_to_repository(building)
 
 
+def remove_old_buildings():
+    buildings_repository.remove_buildings_after_days(30)
+
+
 def _save_building_to_repository(building: BuildingViewModel):
     buildings_repository.save_building(Building(
         title=building.title,
